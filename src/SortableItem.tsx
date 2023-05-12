@@ -1,45 +1,42 @@
-import React from 'react';
-
-import { useSortable } from '@dnd-kit/sortable';
-import './styles.scss';
+import React from "react";
+import { Draggable } from "react-beautiful-dnd";
+import "./styles.scss";
+import { data } from "./DndKitTable";
 
 export function SortableItem(props: any) {
-  const id = props['data-row-key'];
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-  });
+  const id = props["data-row-key"];
 
-  const dragStyle = {
-    transition,
-    // transform: CSS.Translate.toString(transform),
-    '--translate-x': `${transform?.x ?? 0}px`,
-    '--translate-y': `${transform?.y ?? 0}px`,
-  };
+  const [groupId, itemId] = id.split("-");
 
   const { style, className, children, ...rest } = props;
-
-  const cls = [className, 'dragItem', isDragging ? 'dragOverlay' : null].filter((c) => c).join(' ');
+  const index = data
+    .find((item) => item.id === groupId)
+    ?.list?.findIndex((item) => item.id === itemId);
 
   return (
-    <tr
-      id={id}
-      ref={setNodeRef}
-      {...attributes}
-      // {...listeners}
-      className={cls}
-      style={{ ...style, ...dragStyle }}
-      {...rest}
-      data-cypress="draggable-item"
-    >
-      {React.Children.map(children, (child) => {
-        if (child.key === 'sort') {
-          return React.cloneElement(child, {
-            additionalProps: { ...listeners, 'data-cypress': 'draggable-handle' },
-          });
-        }
+    <Draggable key={id} draggableId={id} index={index ?? 0}>
+      {(provided) => (
+        <tr
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          // {...listeners}
+          // className={cls}
+          // style={{ ...style }}
+          {...rest}
+          data-cypress="draggable-item"
+        >
+          {React.Children.map(children, (child) => {
+            if (child.key === "sort") {
+              return React.cloneElement(child, {
+                additionalProps: { "data-cypress": "draggable-handle" },
+              });
+            }
 
-        return child;
-      })}
-    </tr>
+            return child;
+          })}
+        </tr>
+      )}
+    </Draggable>
   );
 }
